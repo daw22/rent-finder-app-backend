@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const profileSchema = mongoose.Schema({
+const tekerayProfileSchema = mongoose.Schema({
   firstName: {
     type: String,
     required: true
@@ -17,15 +17,15 @@ const profileSchema = mongoose.Schema({
     enum: ["male", "female"],
     required: true
   },
-  idPic: {
-    type: String,
-  },
   phoneNumber: {
     type: String,
     match: [ /^(09|07)[0-9]{8}$/, "please insert a valid phone number."]
   },
+  idPic: {
+    type: string // picture of tekeray id
+  }
 }, { timestamps: true });
 
-const profileModel = mongoose.model("Profile", profileSchema);
+const profileModel = mongoose.model("RenterProfile", tekerayProfileSchema);
 
 export default profileModel;

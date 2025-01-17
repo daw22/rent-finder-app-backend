@@ -33,7 +33,6 @@ const accountSchema = new mongoose.Schema({
   },
   profile: {
     type: mongoose.Types.ObjectId,
-    ref: "Profile"
   }
 }, { timestamps: true });
 
