@@ -4,7 +4,6 @@ import bcrypt from 'bcrypt';
 const accountSchema = new mongoose.Schema({
   username: {
     type: String,
-    required: [true, 'Username is required'],
     unique: true,
     trim: true,
     minlength: [3, 'Username must be at least 3 characters long'],
@@ -40,7 +39,7 @@ const accountSchema = new mongoose.Schema({
 accountSchema.pre('save', async function(next) {
   if (this.isModified('password')) {
     try {
-      const salt = await bcrypt.genSalt(12);
+      const salt = await bcrypt.genSalt(10);
       this.password = await bcrypt.hash(this.password, salt);
     } catch (err) {
       return next(err);

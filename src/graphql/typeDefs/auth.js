@@ -11,6 +11,9 @@ const authTypeDefs = `#graphql
   type Success{
     success: Boolean!
   }
+  type RegisterResult{
+    token: String!
+  }
   type Query{
     me: String 
   }
@@ -18,23 +21,13 @@ const authTypeDefs = `#graphql
   
   type Mutation{
     # verify email
-    requestRegistration(email: String!): Success!
+    requestRegistration(email: String!, password: String!, role: String!): Success!
     # resend email verification token
     resendToken(email: String!): Success!
     # account registration
-    register(
-      userName: String!,
-      email: String!,
-      role: String!,
-      password: String!
-    ): Account,
-    
+    register(token: String!, email: String!): RegisterResult!,
     # login  
-    login(
-      userName: String,
-      email: String,
-      password: String!
-    ): LoginResult
+    login(userName: String, email: String, password: String!): LoginResult
   }
 `
 export default authTypeDefs;

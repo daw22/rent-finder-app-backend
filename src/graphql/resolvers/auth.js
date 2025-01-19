@@ -4,7 +4,7 @@ import Account from "../../models/accounts.js";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 import RegisterRequest from "../../models/registerRequest.js";
-import { sendEmail } from '../../utils/mail.js';
+import { sendEmail, validEmail } from '../../utils/mail.js';
 
 const authResolvers={
   Query: {
@@ -15,7 +15,7 @@ const authResolvers={
   Mutation: {
     requestRegistration: async (_, args)=>{
       try{
-        const { email, password } = args;
+        const { email, password, role } = args;
         // verify if email is valid
         if (!validEmail(email)) throw new GraphQLError("invlaid Email format!");
         // check if registration request already exist for this email and delete if exists
@@ -28,7 +28,13 @@ const authResolvers={
         const tokenHashed = await bcrypt.hash(token, 10);
         const passwordHashed = await bcrypt.hash(password, 10);
         // save request to DB
-        const regRequest = new RegisterRequest({email, password: passwordHashed, token: tokenHashed, expiration});
+        const regRequest = new RegisterRequest({
+          email,
+          password: passwordHashed, 
+          role, 
+          token: tokenHashed, 
+          expiration
+        });
         await regRequest.save();
         // send token via email
         sendEmail(email, token);
@@ -62,17 +68,33 @@ const authResolvers={
     },
     register: async(_, args)=>{
       try{
-        const { userName, email, role, password, token} = args;
-        console.log("args:", args);
-        const hashedPassword = await bcrypt.hash(password, 12);
-
-        const newAccount = new Account({ username: userName, email, role, password: hashedPassword});
+        const { email, token} = args;
+        // request exists?
+        const regRequest = await RegisterRequest.findOne({ email });
+        console.log("request:", regRequest);
+        if (!regRequest) throw new GraphQLError("request dosen't exist.");
+        // check if request expired
+        console.log(new Date(regRequest.expiration));
+        console.log(new Date(regRequest.expiration) < new Date());
+        if (regRequest.expiration < new Date()) throw new GraphQLError("token expired!");
+        // verify token
+        console.log("token:", regRequest.token);
+        const validToken = await bcrypt.compare(token, regRequest.token);
+        if (!validToken) throw new GraphQLError("invalid token!");
+        // create account and delete request
+        const newAccount = new Account({
+          email: email,
+          password: regRequest.password,
+          role: regRequest.role
+        });
         await newAccount.save();
+        await RegisterRequest.findOneAndDelete({email});
+        // create token and return it
+        const tokenExpirationDate = new Date();
+        tokenExpirationDate.setHours(new Date().getHours() + 24);
+        const newToken = jwt.sign({email, tokenExpirationDate}, process.env.JWT_SECRET);
         return {
-          id: newAccount.id,
-          username: newAccount.username,
-          email: newAccount.email,
-          role: newAccount.role,
+          token: newToken
         };
       }catch(error){
         throw new Error(error.message);

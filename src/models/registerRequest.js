@@ -20,6 +20,10 @@ const registerRequestSchema = mongoose.Schema({
     type: String,
     required: true
   },
+  role: {
+    type: String,
+    required: true
+  },
   expiration:{
     type: Date,
     required:true
