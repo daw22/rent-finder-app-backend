@@ -19,14 +19,19 @@ const akerayProfileSchema = mongoose.Schema({
   },
   phoneNumber: {
     type: String,
-    match: [ /^(09|07)[0-9]{8}$/, "please insert a valid phone number."]
+    match: [ /^(09|07)[0-9]{8}$/, "please insert a valid phone number."],
+    required: true
   },
   properties: [{
     type: mongoose.Types.ObjectId,
     ref: "Property"
-  }]
+  }],
+  city: {
+    type: String, 
+    required: true
+  }
 }, { timestamps: true });
 
-const profileModel = mongoose.model("RenterProfile", akerayProfileSchema);
+const profileModel = mongoose.model("AkerayProfile", akerayProfileSchema);
 
 export default profileModel;

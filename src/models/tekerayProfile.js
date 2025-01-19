@@ -23,6 +23,10 @@ const tekerayProfileSchema = mongoose.Schema({
   },
   idPic: {
     type: string // picture of tekeray id
+  },
+  city: {
+    type: String,
+    required: true
   }
 }, { timestamps: true });
 

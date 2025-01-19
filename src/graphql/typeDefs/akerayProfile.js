@@ -1,39 +1,39 @@
 const akerayProfileTypeDefs =`#graphql
-  type AkeryaProfile{
+  type AkerayProfile{
     _id: ID!,
     firstName: String!,
     lastName:String!,
     profilePic: String,
     gender: String!,
     phoneNumber: String!,
-    properties: [string!]!
+    properties: [String!]!
     city: String!
   }
 
   type Query{
-    akerayProfile(id: ID!): AkeryaProfile,
+    akerayProfile(id: ID!): AkerayProfile,
     akeray: [AkerayProfile!]!
   }
 
   type Mutation{
-    createAkeryaProfile(
+    createAkerayProfile(
       firstName: String!,
       lastName: String!,
       gender: String!,
       profilePic: String,
       phoneNumber: String!,
       city: String!,
-    ): AkeryaProfile,
+    ): AkerayProfile,
 
     updateAkerayProfile(
       id: ID!,
       firstName: String,
       lastName: String,
       phoneNumber: String,
-      profilePic: String,
-      city: String): AkerayProfile,
+      city: String
+    ): AkerayProfile,
 
-    deleteAkeray(id: ID!): AkeryaProfile
+    deleteAkeray(id: ID!): AkerayProfile
   }
 `
 

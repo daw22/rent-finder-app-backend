@@ -1,17 +1,24 @@
 const authTypeDefs = `#graphql
+  union LoginResult = AkerayProfile | TekerayProfile
+
   type Account{
     _id: ID!,
     username: String!,
     email: String!,
     role: String!,
-    profile: AkerayProfile | TekerayProfile
   }
 
+  type Success{
+    success: Boolean!
+  }
   type Query{
-    me: Account 
+    me: String 
   }
 
+  
   type Mutation{
+    # verify email
+    requestRegistration(email: String!): Success!
     # account registration
     register(
       userName: String!,
@@ -25,7 +32,7 @@ const authTypeDefs = `#graphql
       userName: String,
       email: String,
       password: String!
-    ): AkeryaProfile | TekerayProfile
+    ): LoginResult
   }
 `
 export default authTypeDefs;

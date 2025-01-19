@@ -11,7 +11,7 @@ const tekerayProfileTypeDefs =`#graphql
   }
 
   type Query{
-    tekeray(id: ID!): TekeryaProfile,
+    tekeray(id: ID!): TekerayProfile,
   }
 
   type Mutation{
@@ -22,7 +22,7 @@ const tekerayProfileTypeDefs =`#graphql
       profilePic: String,
       phoneNumber: String!,
       city: String!,
-    ): TekeryaProfile,
+    ): TekerayProfile,
 
     updateTekerayProfile(
       id: ID!,
@@ -33,7 +33,7 @@ const tekerayProfileTypeDefs =`#graphql
       city: String
     ): TekerayProfile,
 
-    deleteTekeray(id: ID!): TekeryaProfile
+    deleteTekeray(id: ID!): TekerayProfile
   }
 `
 

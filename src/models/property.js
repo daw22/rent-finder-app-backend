@@ -55,7 +55,7 @@ const propertySchema = mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Free", "Rented"],
+    enum: ["Available", "NotListed", "Rented"],
     default: "Free"
   },
   amenities: {
@@ -69,6 +69,10 @@ const propertySchema = mongoose.Schema({
   address: {
     type: address,
     required: true
+  },
+  allowCalling: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 

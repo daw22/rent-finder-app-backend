@@ -52,6 +52,8 @@ const propertyTypeDefs =`#graphql
     maxOcupantAllowed: Number,
     address: Address,
     allowCalling: Boolean
-  )
+  ): Property!
  }
 `
+
+export default propertyTypeDefs;
