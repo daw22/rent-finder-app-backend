@@ -19,6 +19,8 @@ const authTypeDefs = `#graphql
   type Mutation{
     # verify email
     requestRegistration(email: String!): Success!
+    # resend email verification token
+    resendToken(email: String!): Success!
     # account registration
     register(
       userName: String!,

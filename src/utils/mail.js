@@ -4,7 +4,7 @@ export const validEmail = (email) => email.toLowerCase().match(
   /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 );
 
-export const getTransport = ()=> nodemailer.createTransport({
+const getTransport = ()=> nodemailer.createTransport({
   service: "gmail",
   auth:{
     user: process.env.EMAIL_ADDRESS,
@@ -12,7 +12,7 @@ export const getTransport = ()=> nodemailer.createTransport({
   }
 });
 
-export const getMailOptions = (email, code) => {
+const getMailOptions = (email, code) => {
   let body = `
   <h2>Hey ${email}</h2>
   <p>Here's the email verification code:</p>
@@ -28,3 +28,9 @@ export const getMailOptions = (email, code) => {
     from: process.env.EMAIL_ADDRESS,
   };
 };
+
+export const sendEmail = (email, token)=>{
+  const mailRequest = getMailOptions(email, token);
+  getTransport().sendMail(mailRequest);
+  console.log("token:", token);
+}

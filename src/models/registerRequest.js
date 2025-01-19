@@ -12,11 +12,18 @@ const registerRequestSchema = mongoose.Schema({
       'Please enter a valid email address'
     ]
   },
+  password:{
+    type: String,
+    required: true,
+  },
   token: {
     type: String,
     required: true
   },
-  expiration: Date
+  expiration:{
+    type: Date,
+    required:true
+  }
 },{ timestamps: true});
 
 const RegisterRequest = mongoose.model("RegistrationRequest", registerRequestSchema);

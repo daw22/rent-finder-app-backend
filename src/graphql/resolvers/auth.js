@@ -4,7 +4,7 @@ import Account from "../../models/accounts.js";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 import RegisterRequest from "../../models/registerRequest.js";
-import { validEmail, getMailOptions, getTransport } from '../../utils/mail.js';
+import { sendEmail } from '../../utils/mail.js';
 
 const authResolvers={
   Query: {
@@ -15,7 +15,7 @@ const authResolvers={
   Mutation: {
     requestRegistration: async (_, args)=>{
       try{
-        const { email } = args;
+        const { email, password } = args;
         // verify if email is valid
         if (!validEmail(email)) throw new GraphQLError("invlaid Email format!");
         // check if registration request already exist for this email and delete if exists
@@ -26,13 +26,35 @@ const authResolvers={
         const nano = customAlphabet('1234567890', 6);
         const token = nano();
         const tokenHashed = await bcrypt.hash(token, 10);
+        const passwordHashed = await bcrypt.hash(password, 10);
         // save request to DB
-        const regRequest = new RegisterRequest({email, token: tokenHashed, expiration});
+        const regRequest = new RegisterRequest({email, password: passwordHashed, token: tokenHashed, expiration});
         await regRequest.save();
         // send token via email
-        const mailRequest = getMailOptions(email, token);
-        getTransport().sendMail(mailRequest);
-        console.log("token:", token);
+        sendEmail(email, token);
+        return {success: true};
+      }catch(error){
+        throw new GraphQLError(error.message);
+      }
+    },
+    resendToken: async (_, args)=>{
+      try{
+        const { email } = args;
+        // generate new token \
+        const nano = customAlphabet('1234567890', 6);
+        const token = nano();
+        const tokenHashed = await bcrypt.hash(token, 10);
+        // update existing request in Db
+        const newExpirationDate = new Date();
+        newExpirationDate.setMinutes(new Date().getMinutes() + 10);
+        const updatedRequest = await RegisterRequest.findOneAndUpdate(
+          {email},
+          {$set: {token: tokenHashed, expiration: newExpirationDate}},
+          {new: true}
+        );
+        if (!updatedRequest) throw new GraphQLError('request dosen\'t exist');
+        // email the new token
+        sendEmail(email, token);
         return {success: true};
       }catch(error){
         throw new GraphQLError(error.message);
@@ -40,7 +62,7 @@ const authResolvers={
     },
     register: async(_, args)=>{
       try{
-        const { userName, email, role, password} = args;
+        const { userName, email, role, password, token} = args;
         console.log("args:", args);
         const hashedPassword = await bcrypt.hash(password, 12);
 
