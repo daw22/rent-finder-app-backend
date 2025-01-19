@@ -22,7 +22,7 @@ const tekerayProfileSchema = mongoose.Schema({
     match: [ /^(09|07)[0-9]{8}$/, "please insert a valid phone number."]
   },
   idPic: {
-    type: string // picture of tekeray id
+    type: String // picture of tekeray id
   },
   city: {
     type: String,

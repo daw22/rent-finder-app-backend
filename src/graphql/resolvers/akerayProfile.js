@@ -1,4 +1,7 @@
+import { GraphQLError } from "graphql";
 import AkerayProfile from "../../models/akerayProfile.js";
+import { getUser } from "../../utils/auth.js";
+import Account from "../../models/accounts.js";
 
 const AkerayProfileResolvers = {
   Query: {
@@ -28,17 +31,27 @@ const AkerayProfileResolvers = {
   Mutation: {
     createAkerayProfile: async (_, args)=>{
       try{
-        const { firstName, lastName, gender, profilePic, phoneNumber, city} = args;
-
-        const newProfile = new AkerayProfile({ firstName, lastName, gender, profilePic, phoneNumber, city});
-        console.log(newProfile);
-        await newProfile.save();
+        const { firstName, lastName, gender, phoneNumber, city, token} = args;
+        // getuser
+        const user = await getUser(token);
+        console.log("user:", user);
+        if(!user) throw new GraphQLError("invalid token!");
+        if(user.profile) throw new GraphQLError("profile already exists!");
+        const newProfile = new AkerayProfile({ firstName, lastName, gender, phoneNumber, city});
+        const savedProfile = await newProfile.save();
+        // update account and link profile
+        await Account.findOneAndUpdate(
+          {_id: user.accountId},
+          {$set: {profile: savedProfile._id}}
+        );
         return {
           firstName: newProfile.firstName,
           lastName: newProfile.lastName,
           gender: newProfile.gender,
           phoneNumber: newProfile.phoneNumber,
-          city: newProfile.city
+          city: newProfile.city,
+          properties: [],
+          profilePic: ""
         }
       }catch(error){
         throw new Error(error.message);

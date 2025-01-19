@@ -1,6 +1,5 @@
 const akerayProfileTypeDefs =`#graphql
   type AkerayProfile{
-    _id: ID!,
     firstName: String!,
     lastName:String!,
     profilePic: String,
@@ -23,6 +22,7 @@ const akerayProfileTypeDefs =`#graphql
       profilePic: String,
       phoneNumber: String!,
       city: String!,
+      token: String!
     ): AkerayProfile,
 
     updateAkerayProfile(

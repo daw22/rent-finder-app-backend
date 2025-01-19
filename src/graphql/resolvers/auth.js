@@ -8,8 +8,19 @@ import { sendEmail, validEmail } from '../../utils/mail.js';
 
 const authResolvers={
   Query: {
-    me: async()=> {
-      return "dawit"
+    me: async (_, args)=> {
+      
+    },
+    login: async (_, args)=>{
+      try{
+        const { unOrEmail } = args;
+        // check if email or username user for login
+        const isEmail = validEmail(unOrEmail);
+        // get account
+
+      }catch(error){
+        throw new GraphQLError(error.message);
+      }
     }
   },
   Mutation: {
@@ -66,23 +77,23 @@ const authResolvers={
         throw new GraphQLError(error.message);
       }
     },
-    register: async(_, args)=>{
+    register: async (_, args)=>{
       try{
         const { email, token} = args;
+        // email already used
+        const emailUsed = await Account.findOne({ email });
+        if (emailUsed) throw new GraphQLError("Account already registerd with this email.");
         // request exists?
         const regRequest = await RegisterRequest.findOne({ email });
-        console.log("request:", regRequest);
         if (!regRequest) throw new GraphQLError("request dosen't exist.");
         // check if request expired
-        console.log(new Date(regRequest.expiration));
-        console.log(new Date(regRequest.expiration) < new Date());
         if (regRequest.expiration < new Date()) throw new GraphQLError("token expired!");
         // verify token
-        console.log("token:", regRequest.token);
         const validToken = await bcrypt.compare(token, regRequest.token);
         if (!validToken) throw new GraphQLError("invalid token!");
         // create account and delete request
         const newAccount = new Account({
+          username: email.split('@')[0],
           email: email,
           password: regRequest.password,
           role: regRequest.role
