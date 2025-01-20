@@ -22,7 +22,6 @@ export const getUser = async (token)=>{
     if (account.role === 'akeray'){
       if (account.profile){
         profile = await AkerayProfile.findOne({_id: account.profile});
-        console.log(account.profile, ":", profile);
       }
     }
     if (account.role === 'tekeray'){

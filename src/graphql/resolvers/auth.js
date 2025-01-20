@@ -91,9 +91,11 @@ const authResolvers={
         // verify token
         const validToken = await bcrypt.compare(token, regRequest.token);
         if (!validToken) throw new GraphQLError("invalid token!");
+        // create random username
+        const nano = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz', 8);
         // create account and delete request
         const newAccount = new Account({
-          username: email.split('@')[0],
+          username: nano(),
           email: email,
           password: regRequest.password,
           role: regRequest.role

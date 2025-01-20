@@ -6,7 +6,8 @@ const akerayProfileTypeDefs =`#graphql
     gender: String!,
     phoneNumber: String!,
     properties: [String!]!
-    city: String!
+    city: String!,
+    username: String
   }
 
   type Query{
@@ -21,16 +22,15 @@ const akerayProfileTypeDefs =`#graphql
       gender: String!,
       profilePic: String,
       phoneNumber: String!,
-      city: String!,
-      token: String!
+      city: String!
     ): AkerayProfile,
 
     updateAkerayProfile(
-      id: ID!,
       firstName: String,
       lastName: String,
       phoneNumber: String,
-      city: String
+      city: String,
+      username: String
     ): AkerayProfile,
 
     deleteAkeray(id: ID!): AkerayProfile

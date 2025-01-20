@@ -29,13 +29,13 @@ const AkerayProfileResolvers = {
     }
   },
   Mutation: {
-    createAkerayProfile: async (_, args)=>{
+    createAkerayProfile: async (_, args, context)=>{
       try{
-        const { firstName, lastName, gender, phoneNumber, city, token} = args;
+        const { firstName, lastName, gender, phoneNumber, city} = args;
         // getuser
-        const user = await getUser(token);
+        const user = context.user;
         console.log("user:", user);
-        if(!user) throw new GraphQLError("invalid token!");
+        if(!user) throw new GraphQLError("unauthorized");
         if(user.profile) throw new GraphQLError("profile already exists!");
         const newProfile = new AkerayProfile({ firstName, lastName, gender, phoneNumber, city});
         const savedProfile = await newProfile.save();
@@ -57,26 +57,44 @@ const AkerayProfileResolvers = {
         throw new Error(error.message);
       }
     },
-    updateAkerayProfile: async (_, args)=>{
+    updateAkerayProfile: async (_, args, context)=>{
       try{
-        const {id, firstName, lastName, phoneNumber, city} = args;
-        const oldProfile = await AkerayProfile.findOne({_id: id});
-        if (!oldProfile){
-          return null;
+        const {username, firstName, lastName, phoneNumber, city} = args;
+        // get user
+        const user = context.user;
+        if (!user) throw new GraphQLError("unauthorized");
+        // Update fields if provided
+        const updates = {};
+        if (firstName) updates.firstName = firstName;
+        if (lastName) updates.lastName = lastName;
+        if (phoneNumber) updates.phoneNumber = phoneNumber;
+        if (city) updates.city = city;
+        
+        // Validate and update username
+        if (username) {
+          const usernameExists = await Account.exists({ username });
+          if (usernameExists && usernameExists._id.equals(user.accountId)) throw new GraphQLError("already using this username")
+          if (usernameExists) throw new GraphQLError("Username already taken");
+          await Account.findOneAndUpdate({ _id: user.accountId }, { username });
         }
-        if (firstName) oldProfile.firstName = firstName;
-        if (lastName) oldProfile.lastName = lastName;
-        if (phoneNumber) oldProfile.phoneNumber = phoneNumber;
-        if (city) oldProfile.city = city;
-
-        await oldProfile.save();
+        let updatedProfile = {};
+        if (Object.keys(updates).length > 0){
+          updatedProfile = await AkerayProfile.findOneAndUpdate(
+            {_id: user.profile._id},
+            {$set: updates},
+            {new: true}
+          );
+        }else{
+          updatedProfile = await AkerayProfile.findOne({_id: user.profile._id});
+        }
+        console.log("updated:", updatedProfile);
         return {
-          id: oldProfile._id,
-          firstName: oldProfile.firstName,
-          lastName: oldProfile.lastName,
-          phoneNumber: oldProfile.phoneNumber,
-          city: oldProfile.city,
-          profilePic: oldProfile.profilePic
+          firstName: updatedProfile.firstName,
+          lastName: updatedProfile.lastName,
+          phoneNumber: updatedProfile.phoneNumber,
+          city: updatedProfile.city,
+          profilePic: updatedProfile.profilePic,
+          ...(username != null && {username})
         }
       }catch(error){
         throw new Error(error.message)

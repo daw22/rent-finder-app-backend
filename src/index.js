@@ -8,6 +8,7 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 
 import { typeDefs, resolvers} from "./graphql/index.js";
 import connectDB from './utils/dbConnect.js';
+import { getUser } from './utils/auth.js';
 
 dotenv.config();
 connectDB();
@@ -27,7 +28,11 @@ app.use(
   cors(),
   express.json(),
   expressMiddleware(server, {
-    context: async ({ req }) => ({ token: req.headers.token }),
+    context: async ({ req }) => {
+      const token  = req.headers.token || "";
+      const user = await getUser(token);
+      return { user };
+    }
   }),
 );
 
