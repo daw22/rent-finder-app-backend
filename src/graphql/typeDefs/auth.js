@@ -20,7 +20,6 @@ const authTypeDefs = `#graphql
   }
 
   type Query{
-    me: String,
     # login  
     login(unOrEmail: String!, password: String!): LoginResponse!
   }
@@ -32,6 +31,7 @@ const authTypeDefs = `#graphql
     resendToken(email: String!): Success!
     # account registration
     register(token: String!, email: String!): RegisterResult!,
+    changePassword(oldPassword: String!, newPassword: String!): Success!,
   }
 `
 export default authTypeDefs;

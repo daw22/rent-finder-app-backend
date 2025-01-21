@@ -17,9 +17,6 @@ const authResolvers={
     }
   },
   Query: {
-    me: async (_, args)=> {
-      
-    },
     login: async (_, args)=>{
       try{
         const { unOrEmail, password } = args;
@@ -81,7 +78,8 @@ const authResolvers={
         sendEmail(email, token);
         return {success: true};
       }catch(error){
-        throw new GraphQLError(error.message);
+        console.log(error.message);
+        return {success: true};
       }
     },
     resendToken: async (_, args)=>{
@@ -104,7 +102,8 @@ const authResolvers={
         sendEmail(email, token);
         return {success: true};
       }catch(error){
-        throw new GraphQLError(error.message);
+        console.log(error.message);
+        return {success: false};
       }
     },
     register: async (_, args)=>{
@@ -139,9 +138,29 @@ const authResolvers={
           token: newToken
         };
       }catch(error){
-        throw new Error(error.message);
+        console.log(error.message);
+        return {token: null}
       }
       
+    },
+    changePassword: async (_, args, context)=>{
+      try{
+        const { oldPassword, newPassword } = args;
+        // check if the user is loged in
+        const user = context.user;
+        if(!user) throw new GraphQLError("unauthorized");
+        // check if old password is write
+        const userAccount = await Account.findById(user.accountId);
+        const correctPassword = await bcrypt.compare(oldPassword,userAccount.password);
+        if (!correctPassword) throw new GraphQLError("unauthorized");
+        // save new password
+        const newPasswordHashed = await bcrypt.hash(newPassword, 10);
+        await Account.findByIdAndUpdate(user.accountId, {password: newPasswordHashed});
+        return {success: true};
+      }catch(error){
+        console.log(error.message);
+        return {success: false};
+      }
     }
   }
 }
