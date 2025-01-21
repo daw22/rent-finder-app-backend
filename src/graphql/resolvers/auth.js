@@ -204,6 +204,37 @@ const authResolvers={
         console.log(error.message);
         return {success: false};
       }
+    },
+    resetPassword: async(_, args)=>{
+      try{
+        const { email, code, newPassword } = args;
+        // get the password reset request
+        const request = await passwordResetRequest.findOne({email});
+        if (!request) throw new GraphQLError("request dosen't exist");
+        // verify request is not expired
+        const requestExpired = request.expiration < new Date();
+        if (requestExpired) throw new GraphQLError("request expired");
+        // verify token
+        const tokenValid = await bcrypt.compare(code, request.code);
+        if (!tokenValid) throw new GraphQLError("wrong code!");
+        // save new password
+        const newPasswordHashed = await bcrypt.hash(newPassword, 10);
+        const updatedAccoount = await Account.findOneAndUpdate(
+          {email: request.email},
+          {$set: {password: newPasswordHashed}},
+          {new: true}
+        );
+        if (!updatedAccoount) throw new GraphQLError("operation failed");
+        // delete request
+        await passwordResetRequest.findOneAndDelete({email});
+        return {success: true};
+      }catch(error){
+        console.log(error.message);
+        if (error.message === "request expired"){
+          await passwordResetRequest.findOneAndDelete({email: args.email});
+        }
+        return {success: false};
+      }
     }
   }
 }

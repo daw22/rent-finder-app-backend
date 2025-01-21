@@ -32,7 +32,8 @@ const authTypeDefs = `#graphql
     # account registration
     register(token: String!, email: String!): RegisterResult!,
     changePassword(oldPassword: String!, newPassword: String!): Success!,
-    requestPasswordReset(email: String!): Success!
+    requestPasswordReset(email: String!): Success!,
+    resetPassword(email: String!, code: String!, newPassword: String!): Success!
   }
 `
 export default authTypeDefs;
