@@ -32,3 +32,12 @@ export const getUser = async (token)=>{
     return null;
   }
 }
+// creates token
+export const createToken = (userAccount)=>{
+  // create expiration date 24h
+  const expirationDate = new Date;
+  expirationDate.setHours(new Date().getHours() + 24);
+  // payload
+  const payload = { email: userAccount.email, expirationDate};
+  return jwt.sign(payload, process.env.JWT_SECRET);
+}

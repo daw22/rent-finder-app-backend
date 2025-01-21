@@ -1,6 +1,10 @@
 const authTypeDefs = `#graphql
   union LoginResult = AkerayProfile | TekerayProfile
 
+  type LoginResponse{
+    profile: LoginResult,
+    token: String!
+  }
   type Account{
     _id: ID!,
     username: String!,
@@ -18,7 +22,7 @@ const authTypeDefs = `#graphql
   type Query{
     me: String,
     # login  
-    login(unOrEmail: String!, password: String!): LoginResult
+    login(unOrEmail: String!, password: String!): LoginResponse!
   }
 
   type Mutation{

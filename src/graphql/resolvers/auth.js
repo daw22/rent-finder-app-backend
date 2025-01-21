@@ -1,23 +1,52 @@
 import { GraphQLError } from "graphql";
 import { customAlphabet } from 'nanoid';
 import Account from "../../models/accounts.js";
+import AkerayProfile from "../../models/akerayProfile.js";
+import TekerayProfile from "../../models/tekerayProfile.js";
 import bcrypt from "bcrypt";
-import jwt from 'jsonwebtoken';
 import RegisterRequest from "../../models/registerRequest.js";
 import { sendEmail, validEmail } from '../../utils/mail.js';
+import { createToken } from "../../utils/auth.js";
 
 const authResolvers={
+  LoginResult: {
+    __resolveType(obj){
+      if (obj.properties) return 'AkerayProfile'
+      if (obj.idPic) return 'TekerayProfile'
+      return null;
+    }
+  },
   Query: {
     me: async (_, args)=> {
       
     },
     login: async (_, args)=>{
       try{
-        const { unOrEmail } = args;
-        // check if email or username user for login
+        const { unOrEmail, password } = args;
+        // check if email or username is used for login
         const isEmail = validEmail(unOrEmail);
         // get account
-
+        let userAccount;
+        if (isEmail)
+          userAccount = await Account.findOne({email: unOrEmail});
+        else
+          userAccount = await Account.findOne({username: unOrEmail});
+        if (!userAccount) throw new GraphQLError("Wrong creadentials");
+        // validate password
+        const validPassword = await bcrypt.compare(password, userAccount.password);
+        if (!validPassword) {console.log("wrong password");throw new GraphQLError("Wrong credentials");}
+        // sign token
+        const token = createToken(userAccount);
+        // get profile of loged in user
+        let userProfile;
+        if (!userAccount.profile) {
+          userProfile = null;
+        } else if (userAccount.role === "akeray") {
+          userProfile = await AkerayProfile.findOne({_id: userAccount.profile});
+        } else if (userAccount.role === "tekeray") {
+          userProfile = await TekerayProfile.findOne({_id: userAccount.profile});
+        }
+        return { profile: userProfile, token };
       }catch(error){
         throw new GraphQLError(error.message);
       }
@@ -38,6 +67,7 @@ const authResolvers={
         const token = nano();
         const tokenHashed = await bcrypt.hash(token, 10);
         const passwordHashed = await bcrypt.hash(password, 10);
+        console.log("saved hash:", passwordHashed);
         // save request to DB
         const regRequest = new RegisterRequest({
           email,
@@ -85,6 +115,7 @@ const authResolvers={
         if (emailUsed) throw new GraphQLError("Account already registerd with this email.");
         // request exists?
         const regRequest = await RegisterRequest.findOne({ email });
+        console.log(regRequest.password);
         if (!regRequest) throw new GraphQLError("request dosen't exist.");
         // check if request expired
         if (regRequest.expiration < new Date()) throw new GraphQLError("token expired!");
@@ -103,9 +134,7 @@ const authResolvers={
         await newAccount.save();
         await RegisterRequest.findOneAndDelete({email});
         // create token and return it
-        const tokenExpirationDate = new Date();
-        tokenExpirationDate.setHours(new Date().getHours() + 24);
-        const newToken = jwt.sign({email, tokenExpirationDate}, process.env.JWT_SECRET);
+        const newToken = createToken({email});
         return {
           token: newToken
         };

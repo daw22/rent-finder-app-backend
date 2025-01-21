@@ -34,7 +34,6 @@ const AkerayProfileResolvers = {
         const { firstName, lastName, gender, phoneNumber, city} = args;
         // getuser
         const user = context.user;
-        console.log("user:", user);
         if(!user) throw new GraphQLError("unauthorized");
         if(user.profile) throw new GraphQLError("profile already exists!");
         const newProfile = new AkerayProfile({ firstName, lastName, gender, phoneNumber, city});
@@ -62,6 +61,7 @@ const AkerayProfileResolvers = {
         const {username, firstName, lastName, phoneNumber, city} = args;
         // get user
         const user = context.user;
+        console.log("user:", user);
         if (!user) throw new GraphQLError("unauthorized");
         // Update fields if provided
         const updates = {};

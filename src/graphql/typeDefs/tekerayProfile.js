@@ -1,6 +1,5 @@
 const tekerayProfileTypeDefs =`#graphql
   type TekerayProfile{
-    _id: ID!,
     firstName: String!,
     lastName:String!,
     profilePic: String,
