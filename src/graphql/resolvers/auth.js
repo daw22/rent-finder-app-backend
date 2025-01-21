@@ -187,9 +187,9 @@ const authResolvers={
         const hashedCode = await bcrypt.hash(code,10);
         // create the magic link
         const expirationDate = new Date();
-        expirationDate.setMinutes(new Date().getMinutes() + 1);
-        const token = jwt.sign({email, expirationDate}, process.env.JWT_SECRET);
-        const magicLink = `http://localhost:4000/reset-password?rst=${token}`;
+        expirationDate.setSeconds(new Date().getSeconds() + 90);
+        const token = jwt.sign({email, expiration: expirationDate}, process.env.JWT_SECRET);
+        const magicLink = `http://localhost:4000/accounts/reset-password?rst=${token}`;
         await sendResetEmail(email, code, magicLink);
         // save request to DB
         const request = new passwordResetRequest({

@@ -10,6 +10,8 @@ import { typeDefs, resolvers} from "./graphql/index.js";
 import connectDB from './utils/dbConnect.js';
 import { getUser } from './utils/auth.js';
 
+import routes from "./routes/index.js";
+
 dotenv.config();
 connectDB();
 const app = express();
@@ -23,6 +25,9 @@ const server = new ApolloServer({
 
 await server.start();
 
+// routes
+app.use("/", routes);
+// graphql
 app.use(
   '/graphql',
   cors(),
