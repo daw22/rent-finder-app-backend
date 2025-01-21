@@ -1,11 +1,13 @@
+import jwt from "jsonwebtoken";
 import { GraphQLError } from "graphql";
 import { customAlphabet } from 'nanoid';
 import Account from "../../models/accounts.js";
 import AkerayProfile from "../../models/akerayProfile.js";
 import TekerayProfile from "../../models/tekerayProfile.js";
+import passwordResetRequest from "../../models/passwordResetRequest.js";
 import bcrypt from "bcrypt";
 import RegisterRequest from "../../models/registerRequest.js";
-import { sendEmail, validEmail } from '../../utils/mail.js';
+import { sendEmail, validEmail, sendResetEmail } from '../../utils/mail.js';
 import { createToken } from "../../utils/auth.js";
 
 const authResolvers={
@@ -156,6 +158,47 @@ const authResolvers={
         // save new password
         const newPasswordHashed = await bcrypt.hash(newPassword, 10);
         await Account.findByIdAndUpdate(user.accountId, {password: newPasswordHashed});
+        return {success: true};
+      }catch(error){
+        console.log(error.message);
+        return {success: false};
+      }
+    },
+    requestPasswordReset: async (_, args)=>{
+      try{
+        const { email } = args;
+        //valid email format?
+        const validEmailFormat = validEmail(email);
+        if (!validEmail) throw new GraphQLError("invalid email");
+        // check if account exist
+        const accountExists = await Account.exists({email});
+        if (!accountExists) throw new GraphQLError("Account dosen't exist.");
+        // request already exists and not expired
+        const requestExist = await passwordResetRequest.findOne({email});
+        if (requestExist && requestExist.expiration > new Date()) throw new GraphQLError("request already exist");
+        // delete expired existing request(if any)
+        if (requestExist && requestExist.expiration <= new Date()){
+          await passwordResetRequest.findOneAndDelete({_id: requestExist._id});
+        } 
+        // generate and send(email) token and magic link, with 10min expiration time
+        // create the verification code
+        const nano = customAlphabet('0123456789', 6);
+        const code = nano();
+        const hashedCode = await bcrypt.hash(code,10);
+        // create the magic link
+        const expirationDate = new Date();
+        expirationDate.setMinutes(new Date().getMinutes() + 1);
+        const token = jwt.sign({email, expirationDate}, process.env.JWT_SECRET);
+        const magicLink = `http://localhost:4000/reset-password?rst=${token}`;
+        await sendResetEmail(email, code, magicLink);
+        // save request to DB
+        const request = new passwordResetRequest({
+          email,
+          code: hashedCode,
+          token,
+          expiration: expirationDate
+        });
+        await request.save();
         return {success: true};
       }catch(error){
         console.log(error.message);
