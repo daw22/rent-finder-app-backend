@@ -74,6 +74,8 @@ const authResolvers={
         if (tokenRecord.revoked){
           // notify user by email
           await suspiciousActivityEmail(user, tokenRecord);
+          // revoke all refresh tokens for this account(on all devices)
+          await RefreshToken.updateMany({userId: user.accountId}, {revoked: true});
           throw new GraphQLError("revoked token in use!!");
         }
         // issue new token
