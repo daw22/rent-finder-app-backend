@@ -8,7 +8,7 @@ import passwordResetRequest from "../../models/passwordResetRequest.js";
 import RefreshToken from "../../models/refreshToken.js";
 import bcrypt from "bcrypt";
 import RegisterRequest from "../../models/registerRequest.js";
-import { sendEmail, validEmail, sendResetEmail } from '../../utils/mail.js';
+import { sendEmail, validEmail, sendResetEmail, suspiciousActivityEmail } from '../../utils/mail.js';
 import { createToken, createAndSaveRefershToken } from "../../utils/auth.js";
 
 const authResolvers={
@@ -48,7 +48,7 @@ const authResolvers={
         }
         // set a refresh token
         const refreshToken = await createAndSaveRefershToken(req, userAccount);
-        res.cookie("jwt", refreshToken, {
+        res.cookie("refreshToken", refreshToken, {
           httpOnly: true,
           secure: true,
           sameSite: "Strict",
@@ -57,6 +57,42 @@ const authResolvers={
         return { profile: userProfile, token };
       }catch(error){
         throw new GraphQLError(error.message);
+      }
+    },
+    refreshAccessToken: async(_, __, { user, req, res })=>{
+      try{
+        // get 
+        const { refreshToken } = req.cookies;
+        
+        if (!refreshToken) throw new GraphQLError("Refresh token missing");
+        // get payload
+        const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+        // get refresh token record
+        const tokenRecord = await RefreshToken.findOne({ token: refreshToken, userId: user.accountId });
+        if (!tokenRecord) throw new GraphQLError("no refresh token found");
+        // if revoked(potential hack!)
+        if (tokenRecord.revoked){
+          // notify user by email
+          await suspiciousActivityEmail(user, tokenRecord);
+          throw new GraphQLError("revoked token in use!!");
+        }
+        // issue new token
+        const newRefreshToken = await createAndSaveRefershToken(req, {email: payload.email, _id: user.accountId});
+        res.cookie("refreshToken", newRefreshToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "Strict",
+          maxAge: 1000 * 60 * 60 * 24 * 7 // a week
+        });
+        // create new access token
+        const newAccessToken = createToken({email: payload.email});
+        // revoke last token
+        tokenRecord.revoked = true;
+        await tokenRecord.save();
+        return {success: true, token: newAccessToken}
+      }catch(error){
+        console.log(error.message);
+        return {success: false, token: null};
       }
     }
   },
@@ -152,7 +188,7 @@ const authResolvers={
         await RegisterRequest.findOneAndDelete({email});
         // set a refresh token
         const refreshToken = await createAndSaveRefershToken(req, newAccount);
-        res.cookie("jwt", refreshToken, {
+        res.cookie("refreshToken", refreshToken, {
           httpOnly: true,
           secure: true,
           sameSite: "Strict",

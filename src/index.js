@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import http from 'http';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import {ApolloServer} from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
@@ -25,6 +26,8 @@ const server = new ApolloServer({
 
 await server.start();
 
+// cookie parser
+app.use(cookieParser());
 // json middleware
 app.use(express.json())
 // routes

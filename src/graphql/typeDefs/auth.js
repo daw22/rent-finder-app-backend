@@ -18,10 +18,14 @@ const authTypeDefs = `#graphql
   type RegisterResult{
     token: String!
   }
-
+  type refreshTokenResult{
+    success: Boolean!,
+    token: String
+  }
   type Query{
     # login  
-    login(unOrEmail: String!, password: String!): LoginResponse!
+    login(unOrEmail: String!, password: String!): LoginResponse!,
+    refreshAccessToken: refreshTokenResult!
   }
 
   type Mutation{
@@ -33,7 +37,7 @@ const authTypeDefs = `#graphql
     register(token: String!, email: String!): RegisterResult!,
     changePassword(oldPassword: String!, newPassword: String!): Success!,
     requestPasswordReset(email: String!): Success!,
-    resetPassword(email: String!, code: String!, newPassword: String!): Success!
+    resetPassword(email: String!, code: String!, newPassword: String!): Success!,
   }
 `
 export default authTypeDefs;
