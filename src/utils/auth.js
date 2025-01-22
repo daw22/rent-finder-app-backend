@@ -2,6 +2,10 @@ import jwt from 'jsonwebtoken';
 import Account from '../models/accounts.js';
 import AkerayProfile from '../models/akerayProfile.js';
 import TekerayProfile from '../models/tekerayProfile.js';
+import RefreshToken from '../models/refreshToken.js';
+
+import geoip from "geoip-lite";
+import { UAParser } from "ua-parser-js";
 
 // return user profile from token
 // if token is wrong or expired(invalid) return null
@@ -40,4 +44,44 @@ export const createToken = (userAccount)=>{
   // payload
   const payload = { email: userAccount.email, expirationDate};
   return jwt.sign(payload, process.env.JWT_SECRET);
+}
+
+// create a refresh token
+export const createAndSaveRefershToken = async (req, userAccount)=>{
+  // sign the token
+  const token = jwt.sign(
+    {email: userAccount.email},
+    process.env.JWT_REFRESH_SECRET,
+    {expiresIn: "7d"}
+  );
+  // Extract metadata from the request
+  const deviceName = req.headers["user-agent"] || "Unknown Device";
+  const ipAddress = req.ip === "::1" ? "127.0.0.1" : req.ip;
+  // for loopback address
+  if (process.env.NODE_ENV === 'production' && ipAddress === "127.0.0.1")
+    throw new Error("invalid ip");
+  // extract location info from ip
+  const geo = geoip.lookup(ipAddress);
+  const country = geo ? geo.country : "Unknown";
+  const region = geo ? geo.region : "Unknown";
+  const city = geo ? geo.city : "Unknown";
+  // extract device info from user-agent
+  const deviceParser = new UAParser(deviceName);
+  const browser = deviceParser.getBrowser() || "unknown";
+  const device = deviceParser.getDevice() || "unknown";
+  const os = deviceParser.getOS() || "unknown";
+  // save refresh token
+  await RefreshToken.create({
+    token,
+    userId: userAccount._id,
+    deviceName: device,
+    ipAddress,
+    country,
+    region,
+    city,
+    browser,
+    os,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+  })
+  return token;
 }

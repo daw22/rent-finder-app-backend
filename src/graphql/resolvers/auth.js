@@ -5,10 +5,11 @@ import Account from "../../models/accounts.js";
 import AkerayProfile from "../../models/akerayProfile.js";
 import TekerayProfile from "../../models/tekerayProfile.js";
 import passwordResetRequest from "../../models/passwordResetRequest.js";
+import RefreshToken from "../../models/refreshToken.js";
 import bcrypt from "bcrypt";
 import RegisterRequest from "../../models/registerRequest.js";
 import { sendEmail, validEmail, sendResetEmail } from '../../utils/mail.js';
-import { createToken } from "../../utils/auth.js";
+import { createToken, createAndSaveRefershToken } from "../../utils/auth.js";
 
 const authResolvers={
   LoginResult: {
@@ -19,7 +20,7 @@ const authResolvers={
     }
   },
   Query: {
-    login: async (_, args, { res })=>{
+    login: async (_, args, { req, res })=>{
       try{
         const { unOrEmail, password } = args;
         // check if email or username is used for login
@@ -46,11 +47,7 @@ const authResolvers={
           userProfile = await TekerayProfile.findOne({_id: userAccount.profile});
         }
         // set a refresh token
-        const refreshToken = jwt.sign(
-          {email: userAccount.email}, 
-          process.env.JWT_REFRESH_SECRET, 
-          {expiresIn: "7d"}
-        );
+        const refreshToken = await createAndSaveRefershToken(req, userAccount);
         res.cookie("jwt", refreshToken, {
           httpOnly: true,
           secure: true,
@@ -154,7 +151,7 @@ const authResolvers={
         await newAccount.save();
         await RegisterRequest.findOneAndDelete({email});
         // set a refresh token
-        const refreshToken = jwt.sign({email}, process.env.JWT_REFRESH_SECRET, {expiresIn: "7d"});
+        const refreshToken = await createAndSaveRefershToken(req, newAccount);
         res.cookie("jwt", refreshToken, {
           httpOnly: true,
           secure: true,
