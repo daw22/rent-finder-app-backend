@@ -20,12 +20,12 @@ export const getUser = async (token)=>{
     if (!account) return null;
     let profile = null;
     if (account.role === 'akeray'){
-      if (account.profile){
+      if (account.profile)
         profile = await AkerayProfile.findOne({_id: account.profile});
-      }
     }
     if (account.role === 'tekeray'){
-      profile = await TekerayProfile.findOne({_id: account.profile});
+      if (account.profile)
+        profile = await TekerayProfile.findOne({_id: account.profile});
     }
     return { profile, accountId: account._id };
   }catch(error){

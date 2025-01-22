@@ -18,7 +18,7 @@ route.post("/reset-password", async (req, res)=> {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     if (!payload) throw new Error("invalid token");
     // check token for expiration
-    if (payload.expiration < new Date()) throw new Error("token expired");
+    if (new Date(payload.expiration) < new Date()) throw new Error("token expired");
     // get the account
     const userAccount = await Account.findOne({email: payload.email});
     if (!userAccount) throw new Error("user account not found");
@@ -30,7 +30,7 @@ route.post("/reset-password", async (req, res)=> {
     return res.status(201).send();
   }catch(error){
     console.log(error.message);
-    res.status(400).send();
+    res.status(400).json({"message": "invalid magic link"});
   }
 });
 

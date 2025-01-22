@@ -35,10 +35,10 @@ app.use(
   cors(),
   express.json(),
   expressMiddleware(server, {
-    context: async ({ req }) => {
+    context: async ({ req, res }) => {
       const token  = req.headers.token || "";
       const user = await getUser(token);
-      return { user };
+      return { user, req, res };
     }
   }),
 );

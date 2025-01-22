@@ -19,7 +19,7 @@ const authResolvers={
     }
   },
   Query: {
-    login: async (_, args)=>{
+    login: async (_, args, { res })=>{
       try{
         const { unOrEmail, password } = args;
         // check if email or username is used for login
@@ -45,6 +45,18 @@ const authResolvers={
         } else if (userAccount.role === "tekeray") {
           userProfile = await TekerayProfile.findOne({_id: userAccount.profile});
         }
+        // set a refresh token
+        const refreshToken = jwt.sign(
+          {email: userAccount.email}, 
+          process.env.JWT_REFRESH_SECRET, 
+          {expiresIn: "7d"}
+        );
+        res.cookie("jwt", refreshToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "Strict",
+          maxAge: 1000 * 60 * 60 * 24 * 7 // a week
+        })
         return { profile: userProfile, token };
       }catch(error){
         throw new GraphQLError(error.message);
@@ -115,7 +127,7 @@ const authResolvers={
         return {success: false};
       }
     },
-    register: async (_, args)=>{
+    register: async (_, args, { res })=>{
       try{
         const { email, token} = args;
         // email already used
@@ -141,7 +153,15 @@ const authResolvers={
         });
         await newAccount.save();
         await RegisterRequest.findOneAndDelete({email});
-        // create token and return it
+        // set a refresh token
+        const refreshToken = jwt.sign({email}, process.env.JWT_REFRESH_SECRET, {expiresIn: "7d"});
+        res.cookie("jwt", refreshToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "Strict",
+          maxAge: 1000 * 60 * 60 * 24 * 7 // a week
+        })
+        // create access token and return it
         const newToken = createToken({email});
         return {
           token: newToken
