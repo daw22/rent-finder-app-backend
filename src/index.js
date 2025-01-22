@@ -25,6 +25,8 @@ const server = new ApolloServer({
 
 await server.start();
 
+// json middleware
+app.use(express.json())
 // routes
 app.use("/", routes);
 // graphql
