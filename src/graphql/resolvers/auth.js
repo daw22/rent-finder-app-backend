@@ -57,8 +57,16 @@ const authResolvers={
         const { email, password, role } = args;
         // verify if email is valid
         if (!validEmail(email)) throw new GraphQLError("invlaid Email format!");
-        // check if registration request already exist for this email and delete if exists
-        await RegisterRequest.findOneAndDelete({email});
+        // check if registration request already exist for this email and delete if expired
+        const existingRequest = await RegisterRequest.findOne({email});
+        if (existingRequest){
+          // check if it is expired - delete and create new - else throw an error
+          if (existingRequest.expiration < new Date()){
+             await RegisterRequest.findOneAndDelete({_id: existingRequest._id})
+            }else {
+              throw new GraphQLError("request already exist and active/not expired");
+            }
+        }
         // create token and expiration date
         const expiration = new Date();
         expiration.setMinutes(new Date().getMinutes() + 10);
@@ -66,7 +74,6 @@ const authResolvers={
         const token = nano();
         const tokenHashed = await bcrypt.hash(token, 10);
         const passwordHashed = await bcrypt.hash(password, 10);
-        console.log("saved hash:", passwordHashed);
         // save request to DB
         const regRequest = new RegisterRequest({
           email,
@@ -81,7 +88,7 @@ const authResolvers={
         return {success: true};
       }catch(error){
         console.log(error.message);
-        return {success: true};
+        return {success: false};
       }
     },
     resendToken: async (_, args)=>{
