@@ -126,11 +126,13 @@ const authResolvers={
         return {success: false};
       }
     },
-    logoutAll: async (_, __, { req })=>{
+    logoutAll: async (_, __, { user, req })=>{
       try{
+        if (!user) throw new GraphQLError("unauthorized");
         const { refreshToken } = req.cookies;
+        const userId = user.accountId;
         if (!refreshToken) throw new GraphQLError("no refresh token sent");
-        await RefreshToken.deleteMany({token: refreshToken});
+        await RefreshToken.updateMany({userId}, {revoked: true});
         return {success: true};
       }catch(error){
         console.log(error.message);
