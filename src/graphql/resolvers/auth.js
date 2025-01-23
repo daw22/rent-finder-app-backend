@@ -59,7 +59,7 @@ const authResolvers={
         throw new GraphQLError(error.message);
       }
     },
-    refreshAccessToken: async(_, __, { user, req, res })=>{
+    refreshAccessToken: async (_, __, { user, req, res })=>{
       try{
         // get 
         const { refreshToken } = req.cookies;
@@ -95,6 +95,46 @@ const authResolvers={
       }catch(error){
         console.log(error.message);
         return {success: false, token: null};
+      }
+    },
+    activeDevices: async (_, __, { user })=>{
+      try{
+        // get userId
+        const userId = user.accountId;
+        // get all issued refresh tokens still in use
+        const devices = await RefreshToken.find({ userId, revoked: false }).select("deviceName ipAddress");
+        return devices;
+      }catch(error){
+        console.log(error.message);
+        return [];
+      }
+    },
+    logout: async (_, __, { user, req })=>{
+      try{
+        //get refresh token and userId
+        const { refreshToken } = req.cookies;
+        const userId = user?.accountId;
+        if (!refreshToken || !userId) throw new GraphQLError("unautorized");
+        // get the refresh toke and revoke it
+        const tokenRecord = await RefreshToken.findOne({token: refreshToken, userId});
+        if (!tokenRecord) throw new GraphQLError("device not found.");
+        tokenRecord.revoked = true;
+        await tokenRecord.save();
+        return {success: true};
+      }catch(error){
+        console.log(error.message);
+        return {success: false};
+      }
+    },
+    logoutAll: async (_, __, { req })=>{
+      try{
+        const { refreshToken } = req.cookies;
+        if (!refreshToken) throw new GraphQLError("no refresh token sent");
+        await RefreshToken.deleteMany({token: refreshToken});
+        return {success: true};
+      }catch(error){
+        console.log(error.message);
+        return {success: false};
       }
     }
   },

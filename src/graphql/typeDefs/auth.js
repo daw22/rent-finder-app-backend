@@ -18,14 +18,21 @@ const authTypeDefs = `#graphql
   type RegisterResult{
     token: String!
   }
-  type refreshTokenResult{
+  type RefreshTokenResult{
     success: Boolean!,
     token: String
+  }
+  type Device{
+    deviceName: String,
+    ipAddress: String,
   }
   type Query{
     # login  
     login(unOrEmail: String!, password: String!): LoginResponse!,
-    refreshAccessToken: refreshTokenResult!
+    refreshAccessToken: RefreshTokenResult!,
+    activeDevices: [Device!]!,
+    logout: Success!,
+    logoutAll: Success!
   }
 
   type Mutation{

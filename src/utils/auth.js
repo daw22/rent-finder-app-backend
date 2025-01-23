@@ -38,9 +38,9 @@ export const getUser = async (token)=>{
 }
 // creates token
 export const createToken = (userAccount)=>{
-  // create expiration date 24h
+  // create expiration date 15m
   const expirationDate = new Date;
-  expirationDate.setHours(new Date().getHours() + 24);
+  expirationDate.setMinutes(new Date().getMinutes() + 15);
   // payload
   const payload = { email: userAccount.email, expirationDate};
   return jwt.sign(payload, process.env.JWT_SECRET);
@@ -66,7 +66,7 @@ export const createAndSaveRefershToken = async (req, userAccount)=>{
   const region = geo ? geo.region : "Unknown";
   const city = geo ? geo.city : "Unknown";
   // extract device info from user-agent
-  const deviceParser = new UAParser(deviceName);
+  const deviceParser = new UAParser(deviceName) || "unknown";
   const browser = deviceParser.getBrowser() || "unknown";
   const device = deviceParser.getDevice() || "unknown";
   const os = deviceParser.getOS() || "unknown";
