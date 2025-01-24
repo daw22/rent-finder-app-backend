@@ -15,6 +15,7 @@
   "dependencies": {
     "@apollo/server": "^4.11.3",
     "@graphql-tools/merge": "^9.0.17",
+    "@graphql-tools/schema": "^10.0.16",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -23,10 +24,12 @@
     "geoip-lite": "^1.4.10",
     "graphql": "^16.10.0",
     "graphql-tools": "^9.0.11",
+    "graphql-ws": "^5.16.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",
     "nanoid": "^5.0.9",
     "nodemailer": "^6.9.16",
-    "ua-parser-js": "^2.0.0"
+    "ua-parser-js": "^2.0.0",
+    "ws": "^8.18.0"
   }
 }

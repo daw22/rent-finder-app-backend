@@ -7,6 +7,10 @@ import {ApolloServer} from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
+
 import { typeDefs, resolvers} from "./graphql/index.js";
 import connectDB from './utils/dbConnect.js';
 import { getUser } from './utils/auth.js';
@@ -18,18 +22,40 @@ connectDB();
 const app = express();
 const httpServer = http.createServer(app);
 
+const schema = makeExecutableSchema({typeDefs, resolvers});
+
 const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+  schema,
+  plugins: [
+    // Proper shutdown for the HTTP server.
+    ApolloServerPluginDrainHttpServer({ httpServer }),
+
+    // Proper shutdown for the WebSocket server.
+    {
+      async serverWillStart() {
+        return {
+          async drainServer() {
+            await serverCleanup.dispose();
+          },
+        };
+      },
+    }
+  ],
 });
+
+//create ws server
+const wsServer = new WebSocketServer({
+  server: httpServer,
+  path: "/subscriptions"
+})
+const serverCleanup = useServer({ schema }, wsServer);
 
 await server.start();
 
 // cookie parser
 app.use(cookieParser());
 // json middleware
-app.use(express.json())
+app.use(express.json());
 // routes
 app.use("/", routes);
 // graphql
