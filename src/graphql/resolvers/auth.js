@@ -15,8 +15,8 @@ const authResolvers={
   LoginResult: {
     __resolveType(obj){
       if (obj.properties) return 'AkerayProfile'
-      if (obj.idPic) return 'TekerayProfile'
-      return null;
+      return 'TekerayProfile'
+      //return null;
     }
   },
   Query: {
@@ -34,7 +34,7 @@ const authResolvers={
         if (!userAccount) throw new GraphQLError("Wrong creadentials");
         // validate password
         const validPassword = await bcrypt.compare(password, userAccount.password);
-        if (!validPassword) {console.log("wrong password");throw new GraphQLError("Wrong credentials");}
+        if (!validPassword) throw new GraphQLError("Wrong credentials");
         // sign token
         const token = createToken(userAccount);
         // get profile of loged in user
@@ -61,7 +61,8 @@ const authResolvers={
     },
     refreshAccessToken: async (_, __, { user, req, res })=>{
       try{
-        // get 
+        if (!user) throw new GraphQLError("unauthorized");
+        // get refreshtoken
         const { refreshToken } = req.cookies;
         
         if (!refreshToken) throw new GraphQLError("Refresh token missing");
@@ -99,6 +100,7 @@ const authResolvers={
     },
     activeDevices: async (_, __, { user })=>{
       try{
+        if (!user?.profile) throw new GraphQLError("unauthorized");
         // get userId
         const userId = user.accountId;
         // get all issued refresh tokens still in use
@@ -109,17 +111,19 @@ const authResolvers={
         return [];
       }
     },
-    logout: async (_, __, { user, req })=>{
+    logout: async (_, __, { user, req, res })=>{
       try{
+        if (!user) throw new GraphQLError("unauthorized");
         //get refresh token and userId
         const { refreshToken } = req.cookies;
         const userId = user?.accountId;
-        if (!refreshToken || !userId) throw new GraphQLError("unautorized");
+        if (!refreshToken || !userId) throw new GraphQLError("unauthorized");
         // get the refresh toke and revoke it
         const tokenRecord = await RefreshToken.findOne({token: refreshToken, userId});
         if (!tokenRecord) throw new GraphQLError("device not found.");
         tokenRecord.revoked = true;
         await tokenRecord.save();
+        res.clearCookie("refreshToken");
         return {success: true};
       }catch(error){
         console.log(error.message);

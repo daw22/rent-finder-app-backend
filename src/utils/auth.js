@@ -16,9 +16,7 @@ export const getUser = async (token)=>{
     // verify token
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     if (!payload) return null;
-    const { email, tokenExpiraionDate } = payload;
-    // check if token is expired
-    if (tokenExpiraionDate < new Date()) return null;
+    const { email } = payload;
     // get account
     const account = await Account.findOne({ email });
     if (!account) return null;
@@ -33,17 +31,15 @@ export const getUser = async (token)=>{
     }
     return { profile, accountId: account._id };
   }catch(error){
+    console.log(error.message);
     return null;
   }
 }
 // creates token
 export const createToken = (userAccount)=>{
-  // create expiration date 15m
-  const expirationDate = new Date;
-  expirationDate.setMinutes(new Date().getMinutes() + 15);
   // payload
-  const payload = { email: userAccount.email, expirationDate};
-  return jwt.sign(payload, process.env.JWT_SECRET);
+  const payload = { email: userAccount.email};
+  return jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: "15m"});
 }
 
 // create a refresh token

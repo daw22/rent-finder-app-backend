@@ -1,5 +1,6 @@
 import TekerayProfile from "../../models/tekerayProfile.js";
 import Account from "../../models/accounts.js";
+import { GraphQLError } from "graphql";
 
 const tekerayProfileResolvers = {
   Mutation: {
