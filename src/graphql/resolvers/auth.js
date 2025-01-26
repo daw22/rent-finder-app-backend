@@ -204,7 +204,7 @@ const authResolvers={
         return {success: false};
       }
     },
-    register: async (_, args, { res })=>{
+    register: async (_, args, { req, res })=>{
       try{
         const { email, token} = args;
         // email already used
@@ -212,7 +212,6 @@ const authResolvers={
         if (emailUsed) throw new GraphQLError("Account already registerd with this email.");
         // request exists?
         const regRequest = await RegisterRequest.findOne({ email });
-        console.log(regRequest.password);
         if (!regRequest) throw new GraphQLError("request dosen't exist.");
         // check if request expired
         if (regRequest.expiration < new Date()) throw new GraphQLError("token expired!");

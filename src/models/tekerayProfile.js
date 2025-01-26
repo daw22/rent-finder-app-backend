@@ -30,6 +30,6 @@ const tekerayProfileSchema = mongoose.Schema({
   }
 }, { timestamps: true });
 
-const profileModel = mongoose.model("RenterProfile", tekerayProfileSchema);
+const profileModel = mongoose.model("TekerayProfile", tekerayProfileSchema);
 
 export default profileModel;
