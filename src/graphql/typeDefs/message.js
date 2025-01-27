@@ -1,11 +1,13 @@
 const messageTypeDefs = `#graphql
   type Message{
+    id: ID!,
     sender: ID!,
     content: String!,
     timestamp: String!
   }
 
   type Conversation{
+    id: ID!,
     akeray: ID!,
     tekeray: ID!,
     messages: [Message!]!,

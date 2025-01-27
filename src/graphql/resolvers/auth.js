@@ -59,28 +59,28 @@ const authResolvers={
         throw new GraphQLError(error.message);
       }
     },
-    refreshAccessToken: async (_, __, { user, req, res })=>{
+    refreshAccessToken: async (_, __, { req, res })=>{
       try{
-        if (!user) throw new GraphQLError("unauthorized");
         // get refreshtoken
         const { refreshToken } = req.cookies;
-        
         if (!refreshToken) throw new GraphQLError("Refresh token missing");
         // get payload
         const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
         // get refresh token record
-        const tokenRecord = await RefreshToken.findOne({ token: refreshToken, userId: user.accountId });
+        const tokenRecord = await RefreshToken.findOne({ token: refreshToken, userId: payload.userId});
         if (!tokenRecord) throw new GraphQLError("no refresh token found");
+        //get user account
+        const user  = await Account.findById(payload.userId);
         // if revoked(potential hack!)
         if (tokenRecord.revoked){
           // notify user by email
-          await suspiciousActivityEmail(user, tokenRecord);
+          await suspiciousActivityEmail(tokenRecord);
           // revoke all refresh tokens for this account(on all devices)
-          await RefreshToken.updateMany({userId: user.accountId}, {revoked: true});
+          await RefreshToken.updateMany({userId: payload.userId}, {revoked: true});
           throw new GraphQLError("revoked token in use!!");
         }
         // issue new token
-        const newRefreshToken = await createAndSaveRefershToken(req, {email: payload.email, _id: user.accountId});
+        const newRefreshToken = await createAndSaveRefershToken(req, {email: payload.email, _id: payload.userId});
         res.cookie("refreshToken", newRefreshToken, {
           httpOnly: true,
           secure: true,

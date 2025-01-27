@@ -6,15 +6,33 @@ const messageResolvers = {
   Query:{
     getMessages: async (_, args, { user })=>{
       try{
+        if (!user?.profile) throw new GraphQLError("unauthorized");
         const { conversationId } = args;
         const conversation = await Conversation.findById(conversationId);
         if (!conversation) throw new GraphQLError("conversation not found.");
         // check if user is in the conversation
-        if (user.proile._id != conversation.akeray){
-          if ( user.profile._id != conversation.tekeray)
+        if (!user.profile._id.equals(conversation.akeray)){
+          if (!user.profile._id.equals(conversation.tekeray))
             throw new GraphQLError("user not in the conversation")
         }
         return conversation.messages;
+      }catch(error){
+        console.log(error.message);
+        return []
+      }
+    },
+    getConversations: async (_, __, { user })=>{
+      try{
+        if (!user?.profile) throw new GraphQLError("unauthorized");
+        const role = user.profile.properties ? "akeray" : "tekeray";
+        // get all conversations the user have
+        let conversations = [];
+        if (role === "akeray") {
+          conversations = await Conversation.find({akeray: user.profile._id});
+        }else{
+          conversations = await Conversation.find({tekeray: user.profile._id});
+        }
+        return conversations;
       }catch(error){
         console.log(error.message);
         return []
@@ -54,6 +72,66 @@ const messageResolvers = {
       }catch(error){
         console.log(error.message);
         return null;
+      }
+    },
+    markReadMessage: async (_, args, {user})=>{
+      try{
+        if (!user?.profile) throw new GraphQLError("unauthorized");
+        // get conversation and message ids
+        const { conversationId, messageId } = args;
+        const result = await Conversation.updateOne(
+          {
+            _id: conversationId,
+            "messages._id": messageId, // Match the specific message by ID
+          },
+          {
+            $set: { "messages.$.isRead": true }, // Use the positional operator `$`
+          }
+        );
+        if (result.modifiedCount > 0) {
+          return true;
+        } else {
+          return false;
+        }
+      }catch(error){
+        console.log(error.message);
+        return false;
+      }
+    },
+    deleteMessage: async (_, args, {user})=>{
+      try{
+        if (!user?.profile) throw new GraphQLError("unauthorized");
+        // get conversation and message ids
+        const { conversationId, messageId } = args;
+        await Conversation.updateOne(
+          {
+            _id: conversationId,
+          },
+          { $pull: {
+            messages: {_id: messageId}
+          }}
+        );
+        return true;
+      }catch(error){
+        console.log(error.message);
+        return false;
+      }
+    },
+    deleteConversation: async(_, args, {user})=>{
+      try{
+        if (!user?.profile) throw new Error("unauthorized");
+        // conversationId
+        const {conversationId} = args;
+        //delete the conversation
+        const deletedConversation = await Conversation.deleteOne({_id: conversationId});
+        if (deletedConversation){
+          return true
+        }else{
+          return false;
+        } 
+      }catch(error){
+        console.log(error.message);
+        throw new GraphQLError("error.message");
       }
     }
   },
