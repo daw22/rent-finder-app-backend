@@ -24,12 +24,12 @@ const tekerayProfileTypeDefs =`#graphql
     ): TekerayProfile,
 
     updateTekerayProfile(
-      id: ID!,
       firstName: String,
       lastName: String,
       phoneNumber: String,
       profilePic: String,
-      city: String
+      city: String,
+      username: String
     ): TekerayProfile,
 
     deleteTekeray(id: ID!): TekerayProfile
