@@ -58,8 +58,8 @@ export const sendResetEmail = async (email, code, magicLink) =>{
   getTransport().sendMail(options);
 }
 
-export const suspiciousActivityEmail = async (user, data)=>{
-  const userEmail = await Account.findOne({_id: user.accountId}).select("email");
+export const suspiciousActivityEmail = async (data)=>{
+  const userEmail = await Account.findOne({_id: data.userId}).select("email");
   const body = `
   <h2>Ethio Rent</h2>
   <p style="color: red; font-weight: bold;">Detected suspisious activity on you account!</p>

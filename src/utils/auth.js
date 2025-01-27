@@ -46,7 +46,7 @@ export const createToken = (userAccount)=>{
 export const createAndSaveRefershToken = async (req, userAccount)=>{
   // sign the token
   const token = jwt.sign(
-    {email: userAccount.email},
+    {email: userAccount.email, userId: userAccount._id},
     process.env.JWT_REFRESH_SECRET,
     {expiresIn: "7d"}
   );
