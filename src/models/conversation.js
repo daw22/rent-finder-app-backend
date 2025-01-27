@@ -20,6 +20,7 @@ const conversationSchema = new mongoose.Schema({
     },
   ],
   updatedAt: { type: Date, default: Date.now },
+  property: {type: mongoose.Schema.Types.ObjectId, ref: "Property"}
 });
 
 export default mongoose.model('Conversation', conversationSchema);

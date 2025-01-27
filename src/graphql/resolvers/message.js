@@ -37,6 +37,46 @@ const messageResolvers = {
         console.log(error.message);
         return []
       }
+    },
+    getUnreadMessages: async (_, __, {user})=>{
+      try{
+        if (!user?.profile) throw new Error("unauthorized");
+        const role = user.profile.properties ? 'akeray' : 'tekeray';
+        // get unread messages from all conversations
+        let unreadConversations = [];
+        if (role === 'akeray'){
+          unreadConversations = await Conversation.find(
+            {
+              akeray: user.profile._id,
+              messages: { $elemMatch: { isRead: false, sender: {$ne: user.profile._id} } }
+            },
+            {
+              _id: 1,
+              property: 1,
+              akeray: 1,
+              tekeray: 1,
+            }
+          );
+        }
+        if (role === 'tekeray'){
+          unreadConversations = await Conversation.find(
+            {
+              tekeray: user.profile._id,
+              messages: { $elemMatch: { isRead: false, sender: {$ne: user.profile._id} } }
+            },
+            {
+              _id: 1,
+              property: 1,
+              akeray: 1,
+              tekeray: 1,
+            }
+          );
+        }
+        return unreadConversations;
+      }catch(error){
+        console.log(error.message);
+        throw new GraphQLError(error.message);
+      }
     }
   },
   Mutation:{
@@ -49,6 +89,8 @@ const messageResolvers = {
         const akeray = user.profile.properties ? user.profile._id : recipient;
         const tekeray = user.profile.properties ? recipient : user.profile._id;
         let conversation = await Conversation.findOne({akeray, tekeray});
+        if (!conversation && user.profile.properties) 
+          throw new GraphQLError("land-loards can't initiate conversations");
         const newMessage = { 
           sender: user.profile._id, 
           content: messageContent,

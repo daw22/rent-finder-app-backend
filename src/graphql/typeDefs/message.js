@@ -16,6 +16,7 @@ const messageTypeDefs = `#graphql
 
   type Query{
     getMessages(conversationId: ID!): [Message!]!,
+    getUnreadMessages: [Conversation!]!,
     getConversations: [Conversation!]!
   }
 
