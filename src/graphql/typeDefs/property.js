@@ -28,7 +28,7 @@ const propertyTypeDefs =`#graphql
  type Query{
   getProperty(id: ID!): Property,
   getMyProperties: [Property!]!,
-  getProperties(city: String!, minPrice: Float, maxPrice: Float, propertyType: String): [Property!]!
+  getAvailableProperties(city: String!, minPrice: Float, maxPrice: Float, propertyType: String): [Property!]!
  }
 
  type Mutation{
@@ -62,7 +62,8 @@ const propertyTypeDefs =`#graphql
     utilities: [String],
     maxOcupantAllowed: Int,
     allowCalling: Boolean,
-    status: String
+    status: String,
+    preferedTenants: String,
   ): Property!
 
   #delete property

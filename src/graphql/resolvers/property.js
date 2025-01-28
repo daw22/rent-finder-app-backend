@@ -29,7 +29,7 @@ const propertyResolvers = {
         throw new GraphQLError(error.message)
       }
     },
-    getProperties: async (_, args, { user})=> {
+    getAvailableProperties: async (_, args, { user})=> {
       try{
         if (!user?.profile) throw new Error("uanuthorize");
         const { city, minPrice, maxPrice, propertyType } = args;
@@ -37,7 +37,7 @@ const propertyResolvers = {
         if (minPrice || maxPrice) where.price = { $gte: minPrice ? minPrice : 0, $lte: maxPrice ? maxPrice : 1000000 };
         if (propertyType) where.propertyType = propertyType;
         // get the properties
-        const properties = await Property.find(where).populate("owner");
+        const properties = await Property.find({...where, status: "Available"}).populate("owner");
         return properties;
       }catch(error){
         console.log(error.message);
@@ -66,6 +66,48 @@ const propertyResolvers = {
           return newProperty;
         }else{
           throw new Error("cant add property");
+        }
+      }catch(error){
+        console.log(error.message);
+        throw new GraphQLError(error.message);
+      }
+    },
+    updateProperty: async (_, args, { user })=>{
+      try{
+        if (!user?.profile) throw new Error("unauthorized");
+        if (!user.profile.properties) throw new Error("only land-loards can update property!");
+        const {id, propertyType, price, numberOfRooms, description, utilities, maxOcupantAllowed, allowCalling, status, preferedTenants} = args;
+        const updateObj = {};
+        if (propertyType) updateObj.propertyType = propertyType;
+        if (price) updateObj.price = price;
+        if (numberOfRooms) updateObj.numberOfRooms = numberOfRooms;
+        if (description) updateObj.description = description;
+        if (utilities) updateObj.utilities = utilities;
+        if (maxOcupantAllowed) updateObj.maxOcupantAllowed = maxOcupantAllowed;
+        if (allowCalling) updateObj.allowCalling = allowCalling;
+        if (status) updateObj.status = status;
+        if (preferedTenants) updateObj.preferedTenants = preferedTenants;
+        const updatedProperty = await Property.findByIdAndUpdate(id, updateObj, {new: true});
+        return updatedProperty;
+      }catch(error){
+        console.log(error.message);
+        throw new GraphQLError(error.message);
+      }
+    },
+    deleteProperty: async (_, args, { user })=>{
+      try{
+        if (!user?.profile) throw new Error("unauthorized");
+        console.log(user.profile.properties.includes(args.propertyId));
+        if (!user.profile.properties) throw new Error("only land-loards can delete property!");
+        // check if user owns the property
+        if (!user.profile.properties.includes(args.propertyId))
+          throw new Error("not your property");
+        // delete the property
+        const deletedProperty = await Property.findByIdAndDelete(args.propertyId);
+        if (deletedProperty){
+          return true
+        }else{
+          return false;
         }
       }catch(error){
         console.log(error.message);
