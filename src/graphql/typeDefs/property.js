@@ -1,9 +1,13 @@
 const propertyTypeDefs =`#graphql
+  type Location {
+    type: String!
+    coordinates: [Float!]! # [longitude, latitude]
+  }
  type Address{
   country: String!,
   city: String!,
   streetName: String,
-  location: String,
+  location: Location,
   houseNumber: String
  }
 
@@ -12,7 +16,7 @@ const propertyTypeDefs =`#graphql
   propertyType: String!,
   pics: [String!]!,
   owner: AkerayProfile,
-  price: Float!,
+  price: Float,
   numberOfRooms: Int!,
   description: String!,
   status: String!,
@@ -23,7 +27,8 @@ const propertyTypeDefs =`#graphql
 
  type Query{
   getProperty(id: ID!): Property,
-  getProperties(city: String!, minPrice: String, maxPrice: String, propertyType: String): [Property!]!
+  getMyProperties: [Property!]!,
+  getProperties(city: String!, minPrice: Float, maxPrice: Float, propertyType: String): [Property!]!
  }
 
  type Mutation{
@@ -31,7 +36,7 @@ const propertyTypeDefs =`#graphql
   createProperty(
     propertyLabel: String
     propertyType: String!,
-    price: Float!,
+    price: Float,
     numberOfRooms: Int,
     description: String!,
     utilities: [String!]!,

@@ -54,7 +54,6 @@ const propertySchema = mongoose.Schema({
   },
   price: {
     type: Number,
-    required: true,
     min: [1, "invalid price"]
   },
   numberOfRooms: {
