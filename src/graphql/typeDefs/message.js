@@ -22,7 +22,7 @@ const messageTypeDefs = `#graphql
 
   type Mutation{
     addMessage(recipient: ID!, messageContent: String!): Message,
-    markReadMessage(conversationId: ID!, messageId: ID!): Boolean!
+    markReadMessages(conversationId: ID!, messageIds: [ID!]!): Boolean!
     deleteMessage(conversationId: ID!, messageId: ID!): Boolean!,
     deleteConversation(conversationId: ID!): Boolean!
   }

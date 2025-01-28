@@ -116,25 +116,23 @@ const messageResolvers = {
         return null;
       }
     },
-    markReadMessage: async (_, args, {user})=>{
+    markReadMessages: async (_, args, {user})=>{
       try{
         if (!user?.profile) throw new GraphQLError("unauthorized");
         // get conversation and message ids
-        const { conversationId, messageId } = args;
+        const { conversationId, messageIds } = args;
         const result = await Conversation.updateOne(
           {
             _id: conversationId,
-            "messages._id": messageId, // Match the specific message by ID
           },
           {
-            $set: { "messages.$.isRead": true }, // Use the positional operator `$`
+            $set: { "messages.$[elem].isRead": true }, // Update all matched elements
+          },
+          {
+            arrayFilters: [{ "elem._id": { $in: messageIds } }], // Match multiple messages
           }
         );
-        if (result.modifiedCount > 0) {
-          return true;
-        } else {
-          return false;
-        }
+        return result.modifiedCount > 0;
       }catch(error){
         console.log(error.message);
         return false;
