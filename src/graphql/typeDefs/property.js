@@ -1,6 +1,5 @@
 const propertyTypeDefs =`#graphql
  type Address{
-  id: ID!,
   country: String!,
   city: String!,
   streetName: String,
@@ -13,46 +12,56 @@ const propertyTypeDefs =`#graphql
   propertyType: String!,
   pics: [String!]!,
   owner: AkerayProfile,
-  price: Number!,
-  numberOfRooms: Number!,
+  price: Float!,
+  numberOfRooms: Int!,
   description: String!,
   status: String!,
-  amenities: [String!]!,
-  maxOcupantAllowed: Number!,
+  utilities: [String!]!,
+  maxOcupantAllowed: Int!,
   address: Address!,
-  allowCalling: Boolean!
  }
 
  type Query{
-  property(id: ID!): Property,
-  properties(city: String!, minPrice: String, maxPrice: String, propertyType: String): [Property!]!
+  getProperty(id: ID!): Property,
+  getProperties(city: String!, minPrice: String, maxPrice: String, propertyType: String): [Property!]!
  }
 
  type Mutation{
   # create a new property
   createProperty(
+    propertyLabel: String
     propertyType: String!,
-    price: Number!,
-    numberOfRooms: Number,
+    price: Float!,
+    numberOfRooms: Int,
     description: String!,
-    amenities: [String!]!,
-    maxOcupantAllowed: Number!,
-    address: Address!,
-    allowCalling: Boolean
+    utilities: [String!]!,
+    maxOcupantAllowed: Int!,
+    allowCalling: Boolean,
+    status: String!,
+    preferedTenants: String,
+    country: String,
+    city: String!,
+    streetName: String,
+    houseNumber: String
+    location: String,
+    pics: [String]
   ): Property!
 
   # update property
   updateProperty(
     id: ID!,
     propertyType: String,
-    price: Number,
-    numberOfRooms: Number,
+    price: Float,
+    numberOfRooms: Int,
     description: String,
-    amenities: [String],
-    maxOcupantAllowed: Number,
-    address: Address,
-    allowCalling: Boolean
+    utilities: [String],
+    maxOcupantAllowed: Int,
+    allowCalling: Boolean,
+    status: String
   ): Property!
+
+  #delete property
+  deleteProperty(propertyId: ID!): Boolean!
  }
 `
 

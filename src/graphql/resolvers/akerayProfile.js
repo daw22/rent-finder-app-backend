@@ -97,7 +97,7 @@ const AkerayProfileResolvers = {
           ...(username != null && {username})
         }
       }catch(error){
-        throw new Error(error.message)
+        throw new GraphQLError(error.message)
       }
     }
   }

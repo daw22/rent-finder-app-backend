@@ -16,7 +16,7 @@ const address = new mongoose.Schema(
     },
     location :{
         type: { type: String, default: 'Point' }, //geoSpatial point
-        coordinates: [Number] //[longitude, latitude] in this order
+        coordinates: { type: [Number], default: [0, 0] } //[longitude, latitude] in this order
     },
     houseNumber: {
         type: String,
@@ -40,7 +40,8 @@ const propertySchema = mongoose.Schema({
   },
   propertyType: {
     type: String,
-    enum: ["single_room", "condominum", "villa", "apartama", "other"]
+    enum: ["single_room", "condominum", "villa", "apartama", "other"],
+    required: true
   },
   pics: {
     type: [String],
@@ -58,7 +59,7 @@ const propertySchema = mongoose.Schema({
   },
   numberOfRooms: {
     type: Number,
-    required: true,
+    default: 1,
     min: [1, "incorrect number of rooms"]
   },
   description: {
@@ -85,19 +86,21 @@ const propertySchema = mongoose.Schema({
   },
   size: {
     type: [Number],
-    validate: [sizeArrayLimit, "size needs exactly two numbers"]
+    default: [0, 0],
+    //validate: [sizeArrayLimit, "size needs exactly two numbers"]
   },
-  initialAdvancedPaymentMonths: {
+  inAdvancePaymentMonths: {
     type: Number,
     default: 1,
     min: [0, "invalid number of months"]
   },
   evacuationNoticeInterval:{
-    type: Number
+    type: Number,
   },
   preferedTenants: {
     type: String,
-    enum: ["student", "family", "couple", "any"]
+    enum: ["student", "family", "couple", "any"],
+    default: "any"
   }
 }, { timestamps: true });
 
