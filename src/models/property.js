@@ -31,7 +31,7 @@ function picsNumberLinit(val) {
 }
 
 function sizeArrayLimit(val) {
-  return val.lenght == 2;
+  return val.length === 2;
 }
 
 const propertySchema = mongoose.Schema({
@@ -86,7 +86,7 @@ const propertySchema = mongoose.Schema({
   size: {
     type: [Number],
     default: [0, 0],
-    //validate: [sizeArrayLimit, "size needs exactly two numbers"]
+    validate: [sizeArrayLimit, "size needs exactly two numbers"]
   },
   inAdvancePaymentMonths: {
     type: Number,

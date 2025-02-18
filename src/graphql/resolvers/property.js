@@ -1,7 +1,6 @@
 import Property from "../../models/property.js";
 import AkerayProfile from "../../models/akerayProfile.js";
 import { GraphQLError } from "graphql";
-import { get } from "mongoose";
 
 const propertyResolvers = {
   Query:{
@@ -57,6 +56,7 @@ const propertyResolvers = {
         if (args.streetName) address.streetName = args.streetName;
         if (args.location) address.location = args.location;
         if (args.houseNumber) address.houseNumber = args.houseNumber;
+        //create property
         const newProperty = await Property.create({...args, owner: user.profile._id, address});
         if (newProperty){
           const updatedProperty = await AkerayProfile.updateOne(
@@ -97,13 +97,17 @@ const propertyResolvers = {
     deleteProperty: async (_, args, { user })=>{
       try{
         if (!user?.profile) throw new Error("unauthorized");
-        console.log(user.profile.properties.includes(args.propertyId));
         if (!user.profile.properties) throw new Error("only land-loards can delete property!");
         // check if user owns the property
         if (!user.profile.properties.includes(args.propertyId))
           throw new Error("not your property");
         // delete the property
         const deletedProperty = await Property.findByIdAndDelete(args.propertyId);
+        // remove from list of properties
+        await AkerayProfile.updateOne(
+          {_id: user.profile._id},
+          {$pull: {properties: args.propertyId}}
+        );
         if (deletedProperty){
           return true
         }else{
