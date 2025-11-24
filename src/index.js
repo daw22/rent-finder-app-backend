@@ -38,7 +38,6 @@ const server = new ApolloServer({
   plugins: [
     // Proper shutdown for the HTTP server.
     ApolloServerPluginDrainHttpServer({ httpServer }),
-
     // Proper shutdown for the WebSocket server.
     {
       async serverWillStart() {
@@ -59,6 +58,7 @@ const server = new ApolloServer({
         }
       }),
   ],
+  introspection: process.env.NODE_ENV !== 'production', // disable schemar reading in production
 });
 
 //create ws server
